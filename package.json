@@ -2,7 +2,7 @@
   "name": "dependencies-resolver",
   "version": "0.0.1",
   "description": "detective your requires and install",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
     "build": "tsup index.ts --minify --minify-whitespace --format esm,cjs --minify-identifiers --minify-syntax --clean"
   },
