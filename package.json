@@ -1,6 +1,6 @@
 {
-  "name": "require-resolver",
-  "version": "1.0.0",
+  "name": "dependencies-resolver",
+  "version": "0.0.1",
   "description": "detective your requires and install",
   "main": "index.js",
   "scripts": {
