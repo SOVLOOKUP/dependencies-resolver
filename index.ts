@@ -1,8 +1,8 @@
-import detective from 'detective'
-import fs from 'fs'
+import { find } from 'detective'
+import { existsSync, writeFileSync, readFileSync, readdirSync, statSync } from 'fs'
 import { join, resolve } from 'path'
-import https from 'https'
-import exec from 'child_process'
+import { get } from 'https'
+import { exec } from 'child_process'
 const url = 'https://nodejs.org/docs/latest/api/documentation.json'
 
 /**
@@ -13,10 +13,10 @@ const url = 'https://nodejs.org/docs/latest/api/documentation.json'
 function getFiles(filePath: string): Array<string> {
   const fileList = []
   function findFile(path: string) {
-    const files = fs.readdirSync(path)
+    const files = readdirSync(path)
     files.forEach((item) => {
       const fPath = join(path, item)
-      const stat = fs.statSync(fPath)
+      const stat = statSync(fPath)
       if (stat.isDirectory() === true && item === 'node_modules') {
         findFile(fPath)
       }
@@ -33,7 +33,10 @@ function getFiles(filePath: string): Array<string> {
 function getDepends(path: string) {
   const depends = []
   const files = getFiles(path)
-  files.forEach((item) => depends.push(...detective(fs.readFileSync(item))))
+  files.forEach((item) => {
+    console.log(...find(readFileSync(item, 'utf-8')).strings)
+    depends.push(...find(readFileSync(item, 'utf-8')).strings)}
+  )
   return Array.from(new Set(depends))
 }
 
@@ -48,68 +51,66 @@ const requireResolver = (
   attach: { [packageName: string]: string } = {},
   npmClient: string = 'npm'
 ) =>
-  https
-    .get(url, (res) => {
-      const datas = []
-      let size = 0
-      res.on('data', (data) => {
-        datas.push(data)
-        size += data.length
-      })
-      res.on('end', () => {
-        const buff = Buffer.concat(datas, size)
-        const result = buff.toString()
-        const content = JSON.parse(result)
-        const table = content.miscs[0].miscs.filter(
-          (item: { name: string }) => item.name === 'stability_overview'
-        )[0].desc
+  get(url, (res) => {
+    const datas = []
+    let size = 0
+    res.on('data', (data) => {
+      datas.push(data)
+      size += data.length
+    })
+    res.on('end', () => {
+      const buff = Buffer.concat(datas, size)
+      const result = buff.toString()
+      const content = JSON.parse(result)
+      const table = content.miscs[0].miscs.filter(
+        (item: { name: string }) => item.name === 'stability_overview'
+      )[0].desc
 
-        const internelModules = table
-          .match(/<a href=(.*?)>/g)
-          .map((item: string | any[]) => item.slice(9, -7))
+      const internelModules = table
+        .match(/<a href=(.*?)>/g)
+        .map((item: string | any[]) => item.slice(9, -7))
 
-        const toinstall = getDepends(path)
-          .filter((item) => !(item.startsWith('./') || item.startsWith('../')))
-          .filter((item) => !internelModules.includes(item))
+      const toinstall = getDepends(path)
+        .filter((item) => !(item.startsWith('./') || item.startsWith('../')))
+        .filter((item) => !internelModules.includes(item))
 
-        const pkgJsonPath = resolve(path, 'package.json')
-        let pkgJson = new Object()
-        if (fs.existsSync(pkgJsonPath)) {
-          pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'))
-          if (pkgJson['dependencies']) {
-            delete pkgJson['dependencies']
-          }
-          if (pkgJson['devDependencies']) {
-            delete pkgJson['devDependencies']
-          }
-          if (pkgJson['scripts']) {
-            delete pkgJson['scripts']
-          }
+      const pkgJsonPath = resolve(path, 'package.json')
+      let pkgJson = new Object()
+      if (existsSync(pkgJsonPath)) {
+        pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
+        if (pkgJson['dependencies']) {
+          delete pkgJson['dependencies']
         }
-        const dependencyJson = new Object()
-        toinstall.forEach((item) => {
-          dependencyJson[item] = '*'
-        })
-        Object.keys(attach).forEach((dependency) => {
-          dependencyJson[dependency] = attach[dependency]
-        })
+        if (pkgJson['devDependencies']) {
+          delete pkgJson['devDependencies']
+        }
+        if (pkgJson['scripts']) {
+          delete pkgJson['scripts']
+        }
+      }
+      const dependencyJson = new Object()
+      toinstall.forEach((item) => {
+        dependencyJson[item] = '*'
+      })
+      Object.keys(attach).forEach((dependency) => {
+        dependencyJson[dependency] = attach[dependency]
+      })
 
-        pkgJson['dependencies'] = dependencyJson
+      pkgJson['dependencies'] = dependencyJson
 
-        fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson))
-        process.chdir(path)
-        console.log('Installing dependencies...')
-        exec.exec(`${npmClient} install`, (err, stdout, stderr) => {
-          if (err) {
-            console.error(err)
-          }
-          console.log(stdout)
-          console.log(stderr)
-        })
+      writeFileSync(pkgJsonPath, JSON.stringify(pkgJson))
+      process.chdir(path)
+      console.log('Installing dependencies...')
+      exec(`${npmClient} install`, (err, stdout, stderr) => {
+        if (err) {
+          console.error(err)
+        }
+        console.log(stdout)
+        console.log(stderr)
       })
     })
-    .on('error', (err) => {
-      console.log(err)
-    })
+  }).on('error', (err) => {
+    console.log(err)
+  })
 
 export default requireResolver
