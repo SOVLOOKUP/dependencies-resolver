@@ -11,6 +11,10 @@ import { get } from 'https'
 import { exec } from 'child_process'
 const url = 'https://nodejs.org/docs/latest/api/documentation.json'
 
+function pprint(content: any[]) {
+  console.log(' [ dependencies-resolver ] ', ...content)
+}
+
 /**
  * 文件遍历方法
  * @param {string} filePath 需要遍历的文件路径
@@ -42,7 +46,7 @@ function getDepends(path: string) {
   files.forEach((item) => {
     depends.push(...find(readFileSync(item, 'utf-8')).strings)
   })
-  console.log("Find dependencies: ",depends)
+  pprint(['Find dependencies: ', depends])
   return Array.from(new Set(depends))
 }
 
@@ -106,17 +110,17 @@ const requireResolver = (
 
       writeFileSync(pkgJsonPath, JSON.stringify(pkgJson))
       process.chdir(path)
-      console.log('Installing dependencies...')
+      pprint(['Installing dependencies...'])
       exec(`${npmClient} install`, (err, stdout, stderr) => {
         if (err) {
           console.error(err)
         }
-        console.log(stdout)
-        console.log(stderr)
+        pprint([stdout])
+        pprint([' ->ERROR<- ', stderr])
       })
     })
   }).on('error', (err) => {
-    console.log(err)
+    pprint([' ->ERROR<- ', err])
   })
 
 export default requireResolver
