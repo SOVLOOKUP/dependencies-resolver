@@ -1,5 +1,11 @@
 import { find } from 'detective'
-import { existsSync, writeFileSync, readFileSync, readdirSync, statSync } from 'fs'
+import {
+  existsSync,
+  writeFileSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+} from 'fs'
 import { join, resolve } from 'path'
 import { get } from 'https'
 import { exec } from 'child_process'
@@ -34,9 +40,10 @@ function getDepends(path: string) {
   const depends = []
   const files = getFiles(path)
   files.forEach((item) => {
-    console.log(...find(readFileSync(item, 'utf-8')).strings)
-    depends.push(...find(readFileSync(item, 'utf-8')).strings)}
-  )
+    const dependencies = find(readFileSync(item, 'utf-8')).strings
+    console.log(dependencies)
+    depends.push(...dependencies)
+  })
   return Array.from(new Set(depends))
 }
 
