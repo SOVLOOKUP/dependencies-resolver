@@ -40,10 +40,9 @@ function getDepends(path: string) {
   const depends = []
   const files = getFiles(path)
   files.forEach((item) => {
-    const dependencies = find(readFileSync(item, 'utf-8')).strings
-    console.log(dependencies)
-    depends.push(...dependencies)
+    depends.push(...find(readFileSync(item, 'utf-8')).strings)
   })
+  console.log("Find dependencies: ",depends)
   return Array.from(new Set(depends))
 }
 
