@@ -7,7 +7,7 @@ import {
   statSync,
 } from 'fs'
 import { join, resolve } from 'path'
-import { exec } from 'child_process'
+import { execSync } from 'child_process'
 import fetch from 'cross-fetch'
 const url = 'https://nodejs.org/docs/latest/api/documentation.json'
 
@@ -50,6 +50,7 @@ function getDepends(path: string) {
   return Array.from(new Set(depends))
 }
 
+
 /**
  * 找出需要安装的包
  * @param {string} path 需要检索的文件路径
@@ -87,6 +88,9 @@ const requireResolver = async (
     if (pkgJson['scripts']) {
       delete pkgJson['scripts']
     }
+    if (pkgJson['type']) {
+      delete pkgJson['type']
+    }
   }
   const dependencyJson = new Object()
   toinstall.forEach((item) => {
@@ -99,15 +103,11 @@ const requireResolver = async (
   pkgJson['dependencies'] = dependencyJson
 
   writeFileSync(pkgJsonPath, JSON.stringify(pkgJson))
+  const currentPath = resolve()
   process.chdir(path)
   pprint(['Installing dependencies...'])
-  exec(`${npmClient} install`, (err, stdout, stderr) => {
-    if (err) {
-      console.error(err)
-    }
-    pprint([stdout])
-    pprint([' ->ERROR<- ', stderr])
-  })
+  pprint([execSync(`${npmClient} install`).toString('utf-8')])
+  process.chdir(currentPath)
 }
 
 export default requireResolver
