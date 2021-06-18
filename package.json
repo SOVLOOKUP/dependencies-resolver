@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsup index.ts --minify --minify-whitespace --format esm,cjs --minify-identifiers --minify-syntax --clean"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "sovlookup",
+  "license": "MIT",
   "type": "module",
   "dependencies": {
     "detective": "^5.2.0"
