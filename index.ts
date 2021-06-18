@@ -7,8 +7,8 @@ import {
   statSync,
 } from 'fs'
 import { join, resolve } from 'path'
-import { get } from 'https'
 import { exec } from 'child_process'
+import fetch from 'cross-fetch'
 const url = 'https://nodejs.org/docs/latest/api/documentation.json'
 
 function pprint(content: any[]) {
@@ -56,71 +56,58 @@ function getDepends(path: string) {
  * @param {Object<string,string>} attach 附加的依赖
  * @param {string} npmClient 安装使用的包管理器名称
  */
-const requireResolver = (
+const requireResolver = async (
   path: string,
   attach: { [packageName: string]: string } = {},
   npmClient: string = 'npm'
-) =>
-  get(url, (res) => {
-    const datas = []
-    let size = 0
-    res.on('data', (data) => {
-      datas.push(data)
-      size += data.length
-    })
-    res.on('end', () => {
-      const buff = Buffer.concat(datas, size)
-      const result = buff.toString()
-      const content = JSON.parse(result)
-      const table = content.miscs[0].miscs.filter(
-        (item: { name: string }) => item.name === 'stability_overview'
-      )[0].desc
+) => {
+  const content = await (await fetch(url)).json()
+  const table = content.miscs[0].miscs.filter(
+    (item: { name: string }) => item.name === 'stability_overview'
+  )[0].desc
 
-      const internelModules = table
-        .match(/<a href=(.*?)>/g)
-        .map((item: string | any[]) => item.slice(9, -7))
+  const internelModules = table
+    .match(/<a href=(.*?)>/g)
+    .map((item: string | any[]) => item.slice(9, -7))
 
-      const toinstall = getDepends(path)
-        .filter((item) => !(item.startsWith('./') || item.startsWith('../')))
-        .filter((item) => !internelModules.includes(item))
+  const toinstall = getDepends(path)
+    .filter((item) => !(item.startsWith('./') || item.startsWith('../')))
+    .filter((item) => !internelModules.includes(item))
 
-      const pkgJsonPath = resolve(path, 'package.json')
-      let pkgJson = new Object()
-      if (existsSync(pkgJsonPath)) {
-        pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
-        if (pkgJson['dependencies']) {
-          delete pkgJson['dependencies']
-        }
-        if (pkgJson['devDependencies']) {
-          delete pkgJson['devDependencies']
-        }
-        if (pkgJson['scripts']) {
-          delete pkgJson['scripts']
-        }
-      }
-      const dependencyJson = new Object()
-      toinstall.forEach((item) => {
-        dependencyJson[item] = '*'
-      })
-      Object.keys(attach).forEach((dependency) => {
-        dependencyJson[dependency] = attach[dependency]
-      })
-
-      pkgJson['dependencies'] = dependencyJson
-
-      writeFileSync(pkgJsonPath, JSON.stringify(pkgJson))
-      process.chdir(path)
-      pprint(['Installing dependencies...'])
-      exec(`${npmClient} install`, (err, stdout, stderr) => {
-        if (err) {
-          console.error(err)
-        }
-        pprint([stdout])
-        pprint([' ->ERROR<- ', stderr])
-      })
-    })
-  }).on('error', (err) => {
-    pprint([' ->ERROR<- ', err])
+  const pkgJsonPath = resolve(path, 'package.json')
+  let pkgJson = new Object()
+  if (existsSync(pkgJsonPath)) {
+    pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
+    if (pkgJson['dependencies']) {
+      delete pkgJson['dependencies']
+    }
+    if (pkgJson['devDependencies']) {
+      delete pkgJson['devDependencies']
+    }
+    if (pkgJson['scripts']) {
+      delete pkgJson['scripts']
+    }
+  }
+  const dependencyJson = new Object()
+  toinstall.forEach((item) => {
+    dependencyJson[item] = '*'
   })
+  Object.keys(attach).forEach((dependency) => {
+    dependencyJson[dependency] = attach[dependency]
+  })
+
+  pkgJson['dependencies'] = dependencyJson
+
+  writeFileSync(pkgJsonPath, JSON.stringify(pkgJson))
+  process.chdir(path)
+  pprint(['Installing dependencies...'])
+  exec(`${npmClient} install`, (err, stdout, stderr) => {
+    if (err) {
+      console.error(err)
+    }
+    pprint([stdout])
+    pprint([' ->ERROR<- ', stderr])
+  })
+}
 
 export default requireResolver
