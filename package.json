@@ -1,6 +1,6 @@
 {
   "name": "dependencies-resolver",
-  "version": "0.2.4",
+  "version": "0.3.1",
   "description": "detective your requires and install",
   "main": "dist/index",
   "scripts": {
@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "@types/node": "^15.12.3",
-    "tslib": "^2.3.0",
     "tsup": "^4.11.2",
     "typescript": "^4.3.4"
   }

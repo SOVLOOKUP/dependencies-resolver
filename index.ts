@@ -8,6 +8,7 @@ import {
 import { join, resolve } from 'path'
 import { execSync } from 'child_process'
 import fetch from 'cross-fetch'
+import konan = require('konan')
 const url = 'https://nodejs.org/docs/latest/api/documentation.json'
 
 function pprint(content: any[]) {
@@ -42,7 +43,6 @@ function getFiles(filePath: string): Array<string> {
 }
 
 async function getDepends(path: string): Promise<string[]> {
-  const konan = await import('konan')
   const depends = []
   const files = getFiles(path)
   files.forEach((item) => {
