@@ -1,4 +1,3 @@
-import { find } from 'detective'
 import {
   existsSync,
   writeFileSync,
@@ -27,10 +26,12 @@ function getFiles(filePath: string): Array<string> {
     files.forEach((item) => {
       const fPath = join(path, item)
       const stat = statSync(fPath)
-      if (stat.isDirectory() === true && item === 'node_modules') {
+
+      if (stat.isDirectory() === true && item !== 'node_modules') {
         findFile(fPath)
       }
-      if (stat.isFile() === true) {
+
+      if (stat.isFile() === true && (item.endsWith(".js") || item.endsWith(".ts") || item.endsWith(".jsx") || item.endsWith(".mjs") || item.endsWith(".cjs"))) {
         fileList.push(fPath)
       }
     })
@@ -40,16 +41,15 @@ function getFiles(filePath: string): Array<string> {
   return fileList
 }
 
-function getDepends(path: string) {
+async function getDepends(path: string): Promise<string[]> {
+  const konan = await import('konan')
   const depends = []
   const files = getFiles(path)
   files.forEach((item) => {
-    depends.push(...find(readFileSync(item, 'utf-8')).strings)
+    depends.push(...konan(readFileSync(item, 'utf-8')).strings)
   })
-  pprint(['Find dependencies: ', depends])
   return Array.from(new Set(depends))
 }
-
 
 /**
  * 找出需要安装的包
@@ -60,7 +60,8 @@ function getDepends(path: string) {
 const requireResolver = async (
   path: string,
   attach: { [packageName: string]: string } = {},
-  npmClient: string = 'npm'
+  npmClient: string = 'npm',
+  excludeOption:string[] = ['dependencies','devDependencies','scripts'],
 ) => {
   const content = await (await fetch(url)).json()
   const table = content.miscs[0].miscs.filter(
@@ -71,26 +72,22 @@ const requireResolver = async (
     .match(/<a href=(.*?)>/g)
     .map((item: string | any[]) => item.slice(9, -7))
 
-  const toinstall = getDepends(path)
+  const toinstall = (await getDepends(path))
     .filter((item) => !(item.startsWith('./') || item.startsWith('../')))
     .filter((item) => !internelModules.includes(item))
 
+  pprint(['Find dependencies: ', toinstall])
+  
   const pkgJsonPath = resolve(path, 'package.json')
   let pkgJson = new Object()
   if (existsSync(pkgJsonPath)) {
     pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
-    if (pkgJson['dependencies']) {
-      delete pkgJson['dependencies']
-    }
-    if (pkgJson['devDependencies']) {
-      delete pkgJson['devDependencies']
-    }
-    if (pkgJson['scripts']) {
-      delete pkgJson['scripts']
-    }
-    if (pkgJson['type']) {
-      delete pkgJson['type']
-    }
+
+    excludeOption.forEach((item) => {
+      if (pkgJson[item]) {
+        delete pkgJson[item]
+      }
+    })
   }
   const dependencyJson = new Object()
   toinstall.forEach((item) => {

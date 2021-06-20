@@ -1,5 +1,15 @@
 {
+    "compileOnSave": false,
     "compilerOptions": {
-        "moduleResolution":"node"
+      "baseUrl": "./",
+      "outDir": "./dist",
+      "sourceMap": true,
+      "declaration": true,
+      "module": "umd", 
+      "moduleResolution": "node",
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "importHelpers": true,
+      "target": "es2015"
     }
-}
+  }
