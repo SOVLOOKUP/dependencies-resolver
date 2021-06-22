@@ -99,6 +99,8 @@ const requireResolver = async (
   process.chdir(path)
   pprint('Installing dependencies...')
   pprint(execSync(`${npmClient} install`).toString('utf-8'))
+  pprint('Deduping dependencies...')
+  pprint(execSync(`${npmClient} dedupe --production`).toString('utf-8'))
   process.chdir(currentPath)
   return dependencyJson
 }
