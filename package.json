@@ -1,6 +1,6 @@
 {
   "name": "dependencies-resolver",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "description": "detective your requires and install",
   "main": "dist/index",
   "scripts": {

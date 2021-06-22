@@ -59,7 +59,7 @@ const requireResolver = async (
   path: string,
   attach: dependencyJson = {},
   npmClient: string = 'npm',
-  excludeOption: string[] = ['devDependencies', 'scripts'],
+  excludeOption: string[] = ['dependencies', 'devDependencies', 'scripts'],
   extend: string[] = ['js', 'mjs', 'cjs', 'ts', 'jsx'],
   silent: boolean = false
 ): Promise<dependencyJson> => {
@@ -81,19 +81,25 @@ const requireResolver = async (
     .filter((item) => !internelModules.includes(item))
   pprint('Find dependencies: ', toinstall)
   const pkgJsonPath = resolve(path, 'package.json')
-  let pkgJson = new Object()
+  let pkgJson = {}
+  let pkgDependencies = {}
   if (existsSync(pkgJsonPath)) {
     pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf-8'))
+    if (pkgJson['dependencies']) {
+      pkgDependencies = pkgJson['dependencies']
+    }
     excludeOption.forEach((item) => {
       if (pkgJson[item]) {
         delete pkgJson[item]
       }
     })
   }
-  toinstall.forEach((item) => {
-    if (!dependencyJson[item]) {
-      dependencyJson[item] = '*'
+  toinstall.forEach((dependency) => {
+    let version = '*'
+    if (Object.keys(pkgDependencies).includes(dependency)) {
+      version = pkgDependencies[dependency]
     }
+    dependencyJson[dependency] = version
   })
   Object.keys(attach).forEach((dependency) => {
     dependencyJson[dependency] = attach[dependency]
