@@ -1,10 +1,10 @@
 {
   "name": "dependencies-resolver",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "detective your requires and install",
   "main": "dist/index",
   "scripts": {
-    "build": "tsup index.ts --dts --minify --minify-whitespace --format esm,cjs --minify-identifiers --minify-syntax --clean",
+    "build": "tsup index.ts --dts --format esm,cjs --clean",
     "prepublishOnly": "npm run build"
   },
   "author": "sovlookup",
