@@ -29,4 +29,6 @@ Search dependencies and install
 
 @param extend — filter suffix of searching files
 
+@param {boolean} silent silent info
+
 @return — <dependencies,version> installed

@@ -11,10 +11,6 @@ import fetch from 'cross-fetch'
 import konan = require('konan')
 const url = 'https://nodejs.org/docs/latest/api/documentation.json'
 
-function pprint(...content: any[]) {
-  console.log(' [ dependencies-resolver ] ', ...content)
-}
-
 export interface dependencyJson {
   [packageName: string]: string
 }
@@ -56,6 +52,7 @@ export function getDepends(path: string, extend: string[]): string[] {
  * @param {string} npmClient package install client
  * @param {string[]} excludeOption options excluded from package.json
  * @param {string[]} extend filter suffix of searching files
+ * @param {boolean} silent silent info
  * @return {Promise<dependencyJson>} <dependencies,version> installed
  */
 const requireResolver = async (
@@ -63,9 +60,14 @@ const requireResolver = async (
   attach: dependencyJson = {},
   npmClient: string = 'npm',
   excludeOption: string[] = ['dependencies', 'devDependencies', 'scripts'],
-  extend: string[] = ['js', 'mjs', 'cjs', 'ts', 'jsx']
+  extend: string[] = ['js', 'mjs', 'cjs', 'ts', 'jsx'],
+  silent: boolean = false
 ): Promise<dependencyJson> => {
+  const pprint = (...content: any[]) => {
+    if (!silent) console.log('[ dependencies-resolver ] ', ...content)
+  }
   const dependencyJson: dependencyJson = {}
+  pprint('Fetch built-in modules list from npm...')
   const content = await (await fetch(url)).json()
   const table = content.miscs[0].miscs.filter(
     (item: { name: string }) => item.name === 'stability_overview'
@@ -73,6 +75,7 @@ const requireResolver = async (
   const internelModules = table
     .match(/<a href=(.*?)>/g)
     .map((item: string | any[]) => item.slice(9, -7))
+  pprint('Resolving dependencies...')
   const toinstall = getDepends(path, extend)
     .filter((item) => !(item.startsWith('./') || item.startsWith('../')))
     .filter((item) => !internelModules.includes(item))
