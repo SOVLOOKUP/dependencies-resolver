@@ -59,7 +59,7 @@ const requireResolver = async (
   path: string,
   attach: dependencyJson = {},
   npmClient: string = 'npm',
-  excludeOption: string[] = ['dependencies', 'devDependencies', 'scripts'],
+  excludeOption: string[] = ['devDependencies', 'scripts'],
   extend: string[] = ['js', 'mjs', 'cjs', 'ts', 'jsx'],
   silent: boolean = false
 ): Promise<dependencyJson> => {
@@ -91,7 +91,9 @@ const requireResolver = async (
     })
   }
   toinstall.forEach((item) => {
-    dependencyJson[item] = '*'
+    if (!dependencyJson[item]) {
+      dependencyJson[item] = '*'
+    }
   })
   Object.keys(attach).forEach((dependency) => {
     dependencyJson[dependency] = attach[dependency]
