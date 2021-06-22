@@ -1,6 +1,6 @@
 # dependencies-resolver
 
-detective, install and dedupe dependencies without package.json，exclude node built-in modules automatically
+detective, install and simplify dependencies without package.json，exclude node built-in modules automatically
 
 ## install
 
