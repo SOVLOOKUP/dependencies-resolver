@@ -79,7 +79,6 @@ const requireResolver = async (
   const toinstall = getDepends(path, extend)
     .filter((item) => !(item.startsWith('./') || item.startsWith('../')))
     .filter((item) => !internelModules.includes(item))
-  pprint('Find dependencies: ', toinstall)
   const pkgJsonPath = resolve(path, 'package.json')
   let pkgJson = {}
   let pkgDependencies = {}
@@ -105,6 +104,10 @@ const requireResolver = async (
     dependencyJson[dependency] = attach[dependency]
   })
   pkgJson['dependencies'] = dependencyJson
+  pprint(
+    'Find dependencies: ',
+    JSON.stringify(dependencyJson, null, 2).replace('{', '').replace('}', '')
+  )
   writeFileSync(pkgJsonPath, JSON.stringify(pkgJson))
   const currentPath = resolve()
   process.chdir(path)
