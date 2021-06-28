@@ -14,6 +14,8 @@ npm install dependencies-resolver ## yarn add dependencies-resolver
 import requireResolver from "dependencies-resolver"
 await requireResolver('PATH')
 
+```
+
 ```js
 
 > output
