@@ -10,12 +10,12 @@ npm install dependencies-resolver ## yarn add dependencies-resolver
 
 ## usage
 
-```
+```js
 import requireResolver from "dependencies-resolver"
 await requireResolver('PATH')
 ```
 
-```js
+```json
 
 > output
 [ dependencies-resolver ]  Fetch built-in modules list from npm...
