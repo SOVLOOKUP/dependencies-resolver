@@ -14,7 +14,7 @@ npm install dependencies-resolver ## yarn add dependencies-resolver
 import requireResolver from "dependencies-resolver"
 await requireResolver('PATH')
 
-```bash
+```
 > output
 [ dependencies-resolver ]  Fetch built-in modules list from npm...
 [ dependencies-resolver ]  Resolving dependencies...
@@ -28,6 +28,7 @@ await requireResolver('PATH')
 [ dependencies-resolver ]  Deduping dependencies...
 [ dependencies-resolver ]  removed 4 packages, changed 2 packages, and audited 530 packages in 3s
 ```
+
 ## params
 
 Search dependencies and install
